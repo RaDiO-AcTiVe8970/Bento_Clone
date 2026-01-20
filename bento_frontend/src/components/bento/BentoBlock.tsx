@@ -661,13 +661,14 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
       case "MAP":
         const coordinates = block.url ? extractMapCoordinates(block.url) : null
         const locationQuery = block.content?.location as string || ""
+        const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         
         // Build the embed URL
         let mapEmbedUrl = ""
         if (coordinates) {
           mapEmbedUrl = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d3000!2d${coordinates.lng}!3d${coordinates.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1234567890`
-        } else if (locationQuery) {
-          mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(locationQuery)}`
+        } else if (locationQuery && mapsApiKey) {
+          mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${mapsApiKey}&q=${encodeURIComponent(locationQuery)}`
         } else if (block.url) {
           // Try to use the URL directly with embed format
           mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(block.url)}&output=embed`
