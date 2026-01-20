@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BentoGrid } from "@/components/bento/BentoGrid"
 import { BlockData, BlockType } from "@/components/bento/BentoBlock"
+import { BlockEditor } from "@/components/bento/BlockEditor"
 import { 
   ArrowLeft, 
   Save, 
@@ -54,7 +55,7 @@ export default function EditProfilePage() {
     url: "",
     imageUrl: "",
     text: "",
-    location: "",
+    mapLocation: "",
   })
 
   const user = session?.user
@@ -85,6 +86,16 @@ export default function EditProfilePage() {
     setBlocks(newBlocks)
   }, [])
 
+  // Size presets for new blocks
+  const sizePresets = [
+    { name: "Small", gridWidth: 1, gridHeight: 1, desc: "1×1" },
+    { name: "Wide", gridWidth: 2, gridHeight: 1, desc: "2×1" },
+    { name: "Tall", gridWidth: 1, gridHeight: 2, desc: "1×2" },
+    { name: "Medium", gridWidth: 2, gridHeight: 2, desc: "2×2" },
+    { name: "Large", gridWidth: 3, gridHeight: 2, desc: "3×2" },
+  ]
+  const [selectedSize, setSelectedSize] = useState(sizePresets[0])
+
   const handleAddBlock = async () => {
     if (!newBlockType) return
 
@@ -94,22 +105,27 @@ export default function EditProfilePage() {
       title: newBlockData.title || undefined,
       url: newBlockData.url || undefined,
       imageUrl: newBlockData.imageUrl || undefined,
-      content: newBlockData.text ? { text: newBlockData.text } : newBlockData.location ? { location: newBlockData.location } : undefined,
+      content: newBlockData.text ? { text: newBlockData.text } : newBlockData.mapLocation ? { location: newBlockData.mapLocation } : undefined,
       gridX: 0,
       gridY: blocks.length,
-      gridWidth: newBlockType === "IMAGE" || newBlockType === "MAP" ? 2 : 1,
-      gridHeight: newBlockType === "IMAGE" || newBlockType === "MAP" ? 2 : 1,
+      gridWidth: selectedSize.gridWidth,
+      gridHeight: selectedSize.gridHeight,
       isVisible: true,
     }
 
     setBlocks([...blocks, newBlock])
     setShowAddBlock(false)
     setNewBlockType(null)
-    setNewBlockData({ title: "", url: "", imageUrl: "", text: "", location: "" })
+    setNewBlockData({ title: "", url: "", imageUrl: "", text: "", mapLocation: "" })
+    setSelectedSize(sizePresets[0])
   }
 
   const handleDeleteBlock = useCallback((id: string) => {
     setBlocks(blocks.filter((b) => b.id !== id))
+  }, [blocks])
+
+  const handleEditBlock = useCallback((updatedBlock: BlockData) => {
+    setBlocks(blocks.map((b) => b.id === updatedBlock.id ? updatedBlock : b))
   }, [blocks])
 
   const handleSave = async () => {
@@ -250,7 +266,7 @@ export default function EditProfilePage() {
                     </span>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium">Title</label>
                       <Input
@@ -298,15 +314,62 @@ export default function EditProfilePage() {
                       <div>
                         <label className="text-sm font-medium">Location</label>
                         <Input
-                          value={newBlockData.location}
-                          onChange={(e) => setNewBlockData({ ...newBlockData, location: e.target.value })}
+                          value={newBlockData.mapLocation}
+                          onChange={(e) => setNewBlockData({ ...newBlockData, mapLocation: e.target.value })}
                           placeholder="City, Country"
                         />
                       </div>
                     )}
+
+                    {/* Size Selection */}
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Block Size</label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {sizePresets.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => setSelectedSize(preset)}
+                            className={`flex flex-col items-center p-2 rounded-lg border-2 transition-all ${
+                              selectedSize.name === preset.name
+                                ? "border-primary bg-primary/10"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="w-8 h-8 grid grid-cols-3 grid-rows-2 gap-0.5 mb-1">
+                              {Array.from({ length: 6 }).map((_, i) => {
+                                const col = i % 3
+                                const row = Math.floor(i / 3)
+                                const isActive = col < preset.gridWidth && row < preset.gridHeight
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`rounded-sm ${
+                                      isActive
+                                        ? selectedSize.name === preset.name
+                                          ? "bg-primary"
+                                          : "bg-primary/60"
+                                        : "bg-muted/50"
+                                    }`}
+                                  />
+                                )
+                              })}
+                            </div>
+                            <span className="text-[10px] font-medium">{preset.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {selectedSize.name === "Small" && "Icon and title only"}
+                        {selectedSize.name === "Wide" && "Compact horizontal preview"}
+                        {selectedSize.name === "Tall" && "Vertical layout"}
+                        {selectedSize.name === "Medium" && "Rich embed with details"}
+                        {selectedSize.name === "Large" && "Full embedded content"}
+                      </p>
+                    </div>
                   </div>
 
-                  <Button onClick={handleAddBlock} className="w-full">
+                  <Button onClick={handleAddBlock} className="w-full mt-4">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Block
                   </Button>
@@ -315,6 +378,16 @@ export default function EditProfilePage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Block Editor Modal */}
+      {editingBlock && (
+        <BlockEditor
+          block={editingBlock}
+          onSave={handleEditBlock}
+          onDelete={handleDeleteBlock}
+          onClose={() => setEditingBlock(null)}
+        />
       )}
     </main>
   )

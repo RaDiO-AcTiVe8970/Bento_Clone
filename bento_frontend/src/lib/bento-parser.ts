@@ -222,80 +222,59 @@ export async function parseBentoFile(file: File): Promise<ParsedBentoData> {
 }
 
 // Parse ZIP file from Bento.me export
+// Bento.me exports contain: profile.txt and images/ folder
 async function parseZipFile(file: File): Promise<ParsedBentoData> {
   try {
     const zip = await JSZip.loadAsync(file)
     
-    // Look for JSON files in the ZIP
+    // Collect all files in the ZIP
+    const textFiles: string[] = []
     const jsonFiles: string[] = []
     const imageFiles: Map<string, string> = new Map()
     
     zip.forEach((relativePath, zipEntry) => {
-      if (relativePath.endsWith('.json')) {
+      const lowerPath = relativePath.toLowerCase()
+      if (lowerPath.endsWith('.txt')) {
+        textFiles.push(relativePath)
+      } else if (lowerPath.endsWith('.json')) {
         jsonFiles.push(relativePath)
       } else if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(relativePath)) {
         imageFiles.set(relativePath, relativePath)
       }
     })
     
-    if (jsonFiles.length === 0) {
-      throw new Error('No JSON data file found in the ZIP archive')
-    }
+    // Look for profile.txt first (Bento.me's actual export format)
+    const profileTxt = textFiles.find(f => f.toLowerCase().includes('profile'))
     
-    // Try to find the main data file
-    // Common names: data.json, export.json, bento.json, profile.json, or just the first JSON
-    const priorityNames = ['data.json', 'export.json', 'bento.json', 'profile.json', 'backup.json']
-    let mainJsonFile = jsonFiles[0]
-    
-    for (const name of priorityNames) {
-      const found = jsonFiles.find(f => f.toLowerCase().endsWith(name))
-      if (found) {
-        mainJsonFile = found
-        break
+    if (profileTxt) {
+      const textContent = await zip.file(profileTxt)?.async('string')
+      if (textContent) {
+        return parseProfileTxt(textContent, zip, imageFiles)
       }
     }
     
-    const jsonContent = await zip.file(mainJsonFile)?.async('string')
-    
-    if (!jsonContent) {
-      throw new Error('Could not read the data file from ZIP archive')
-    }
-    
-    const parsedData = parseJsonContent(jsonContent)
-    
-    // Process embedded images from ZIP
-    // Convert image paths to base64 data URLs for blocks that reference local images
-    for (const block of parsedData.blocks) {
-      if (block.imageUrl && !block.imageUrl.startsWith('http')) {
-        // Try to find the image in the ZIP
-        const imagePath = findImageInZip(block.imageUrl, imageFiles)
-        if (imagePath) {
-          const imageFile = zip.file(imagePath)
-          if (imageFile) {
-            const imageData = await imageFile.async('base64')
-            const extension = imagePath.split('.').pop()?.toLowerCase() || 'png'
-            const mimeType = getMimeType(extension)
-            block.imageUrl = `data:${mimeType};base64,${imageData}`
-          }
+    // Fallback to JSON if no profile.txt found
+    if (jsonFiles.length > 0) {
+      const priorityNames = ['data.json', 'export.json', 'bento.json', 'profile.json', 'backup.json']
+      let mainJsonFile = jsonFiles[0]
+      
+      for (const name of priorityNames) {
+        const found = jsonFiles.find(f => f.toLowerCase().endsWith(name))
+        if (found) {
+          mainJsonFile = found
+          break
         }
       }
-    }
-    
-    // Also handle profile avatar
-    if (parsedData.profile.avatar && !parsedData.profile.avatar.startsWith('http')) {
-      const avatarPath = findImageInZip(parsedData.profile.avatar, imageFiles)
-      if (avatarPath) {
-        const avatarFile = zip.file(avatarPath)
-        if (avatarFile) {
-          const avatarData = await avatarFile.async('base64')
-          const extension = avatarPath.split('.').pop()?.toLowerCase() || 'png'
-          const mimeType = getMimeType(extension)
-          parsedData.profile.avatar = `data:${mimeType};base64,${avatarData}`
-        }
+      
+      const jsonContent = await zip.file(mainJsonFile)?.async('string')
+      if (jsonContent) {
+        const parsedData = parseJsonContent(jsonContent)
+        await processImagesInData(parsedData, zip, imageFiles)
+        return parsedData
       }
     }
     
-    return parsedData
+    throw new Error('No profile.txt or JSON data file found in the ZIP archive')
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to parse ZIP file: ${error.message}`)
@@ -304,17 +283,284 @@ async function parseZipFile(file: File): Promise<ParsedBentoData> {
   }
 }
 
-function findImageInZip(imagePath: string, imageFiles: Map<string, string>): string | undefined {
+// Parse Bento.me's profile.txt format
+// Format:
+// Section Name ↯
+// ==============
+// Text: Some text content
+// https://url.com
+async function parseProfileTxt(
+  content: string, 
+  zip: JSZip, 
+  imageFiles: Map<string, string>
+): Promise<ParsedBentoData> {
+  const lines = content.split('\n')
+  
+  const profile: ParsedBentoData['profile'] = {}
+  const blocks: ParsedBlock[] = []
+  
+  let currentSection = ''
+  let blockIndex = 0
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    
+    // Skip empty lines
+    if (!line) continue
+    
+    // Check for section headers (e.g., "Intro ↯" followed by "=======")
+    // Section header has ↯ symbol or next line is all = or -
+    if (line.includes('↯') || (lines[i + 1] && /^[=\-]+$/.test(lines[i + 1]?.trim()))) {
+      // Extract section name (remove ↯ symbol)
+      currentSection = line.replace('↯', '').trim().toLowerCase()
+      // Skip the === line if present
+      if (lines[i + 1] && /^[=\-]+$/.test(lines[i + 1]?.trim())) {
+        i++
+      }
+      continue
+    }
+    
+    // Skip separator lines
+    if (/^[=\-]+$/.test(line)) continue
+    
+    // Check for "Text:" content
+    if (line.startsWith('Text:')) {
+      const textContent = line.slice(5).trim()
+      if (textContent) {
+        blocks.push({
+          type: 'TEXT',
+          title: getSectionTitle(currentSection),
+          content: { text: textContent },
+          url: undefined,
+          imageUrl: undefined,
+          gridX: blockIndex % 4,
+          gridY: Math.floor(blockIndex / 4),
+          gridWidth: 2, // Text blocks are wider
+          gridHeight: 1,
+        })
+        blockIndex++
+      }
+      continue
+    }
+    
+    // Check for URLs (http:// or https://)
+    if (line.startsWith('http://') || line.startsWith('https://')) {
+      const url = line.trim()
+      const { type, title } = detectTypeAndTitleFromUrl(url, currentSection)
+      
+      blocks.push({
+        type,
+        title,
+        content: undefined,
+        url,
+        imageUrl: undefined,
+        gridX: blockIndex % 4,
+        gridY: Math.floor(blockIndex / 4),
+        gridWidth: 1,
+        gridHeight: 1,
+      })
+      blockIndex++
+      continue
+    }
+  }
+  
+  // Process images from ZIP
+  const parsedData: ParsedBentoData = { profile, blocks }
+  await processImagesInData(parsedData, zip, imageFiles)
+  
+  return parsedData
+}
+
+// Get a nice title for text blocks based on section
+function getSectionTitle(section: string): string {
+  const titles: Record<string, string> = {
+    'intro': 'About Me',
+    'skills': 'Skills',
+    'social media': 'Social',
+    'for you': 'For You',
+    'photo exhibit': 'Gallery',
+    'outro': 'Contact',
+  }
+  return titles[section] || 'Info'
+}
+
+// Detect block type and generate title from URL
+function detectTypeAndTitleFromUrl(url: string, section: string): { type: string; title: string } {
+  const lowerUrl = url.toLowerCase()
+  
+  // GitHub
+  if (lowerUrl.includes('github.com')) {
+    const match = url.match(/github\.com\/([^\/\?]+)/)
+    return { type: 'GITHUB', title: match ? `GitHub - ${match[1]}` : 'GitHub' }
+  }
+  
+  // Figma
+  if (lowerUrl.includes('figma.com')) {
+    return { type: 'LINK', title: 'Figma' }
+  }
+  
+  // YouTube
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+    return { type: 'YOUTUBE', title: 'YouTube' }
+  }
+  
+  // Instagram
+  if (lowerUrl.includes('instagram.com')) {
+    const match = url.match(/instagram\.com\/([^\/\?]+)/)
+    return { type: 'INSTAGRAM', title: match ? `@${match[1]}` : 'Instagram' }
+  }
+  
+  // Twitch
+  if (lowerUrl.includes('twitch.tv')) {
+    const match = url.match(/twitch\.tv\/([^\/\?]+)/)
+    return { type: 'LINK', title: match ? `Twitch - ${match[1]}` : 'Twitch' }
+  }
+  
+  // Facebook
+  if (lowerUrl.includes('facebook.com')) {
+    const match = url.match(/facebook\.com\/(?:profile\.php\?id=)?([^\/\?&]+)/)
+    return { type: 'FACEBOOK', title: match ? match[1] : 'Facebook' }
+  }
+  
+  // Twitter/X
+  if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
+    const match = url.match(/(?:twitter|x)\.com\/([^\/\?]+)/)
+    return { type: 'TWITTER', title: match ? `@${match[1]}` : 'Twitter' }
+  }
+  
+  // LinkedIn
+  if (lowerUrl.includes('linkedin.com')) {
+    return { type: 'LINKEDIN', title: 'LinkedIn' }
+  }
+  
+  // Spotify
+  if (lowerUrl.includes('spotify.com')) {
+    if (lowerUrl.includes('/playlist/')) {
+      return { type: 'SPOTIFY', title: 'Spotify Playlist' }
+    }
+    return { type: 'SPOTIFY', title: 'Spotify' }
+  }
+  
+  // Steam
+  if (lowerUrl.includes('steamcommunity.com')) {
+    const idMatch = url.match(/steamcommunity\.com\/id\/([^\/\?]+)/)
+    const profileMatch = url.match(/steamcommunity\.com\/profiles\/(\d+)/)
+    const username = idMatch ? idMatch[1] : (profileMatch ? profileMatch[1] : null)
+    return { type: 'STEAM', title: username || 'Steam' }
+  }
+  
+  // Discord
+  if (lowerUrl.includes('discord.com') || lowerUrl.includes('discord.gg')) {
+    // Discord invite links: discord.gg/invite or discord.com/invite/code
+    const inviteMatch = url.match(/(?:discord\.gg|discord\.com\/invite)\/([^\/\?\s]+)/)
+    // Discord user profile: discord.com/users/id
+    const userMatch = url.match(/discord\.com\/users\/(\d+)/)
+    const id = inviteMatch ? inviteMatch[1] : (userMatch ? userMatch[1] : null)
+    return { type: 'DISCORD', title: id || 'Discord' }
+  }
+  
+  // Shutterstock
+  if (lowerUrl.includes('shutterstock.com')) {
+    return { type: 'LINK', title: 'Shutterstock Portfolio' }
+  }
+  
+  // Google Maps
+  if (lowerUrl.includes('google.com/maps') || lowerUrl.includes('maps.google')) {
+    return { type: 'MAP', title: 'Location' }
+  }
+  
+  // Default based on section
+  const sectionTitles: Record<string, string> = {
+    'social media': 'Social Link',
+    'skills': 'Portfolio',
+    'for you': 'Link',
+    'photo exhibit': 'Gallery',
+  }
+  
+  return { type: 'LINK', title: sectionTitles[section] || 'Link' }
+}
+
+// Process images in parsed data - convert local paths to base64
+async function processImagesInData(
+  parsedData: ParsedBentoData,
+  zip: JSZip,
+  imageFiles: Map<string, string>
+): Promise<void> {
+  // Process block images
+  for (const block of parsedData.blocks) {
+    if (block.imageUrl && !block.imageUrl.startsWith('http') && !block.imageUrl.startsWith('data:')) {
+      const imageData = await getImageAsBase64(block.imageUrl, zip, imageFiles)
+      if (imageData) {
+        block.imageUrl = imageData
+      }
+    }
+  }
+  
+  // Process profile avatar
+  if (parsedData.profile.avatar && 
+      !parsedData.profile.avatar.startsWith('http') && 
+      !parsedData.profile.avatar.startsWith('data:')) {
+    const avatarData = await getImageAsBase64(parsedData.profile.avatar, zip, imageFiles)
+    if (avatarData) {
+      parsedData.profile.avatar = avatarData
+    }
+  }
+}
+
+// Get image from ZIP as base64 data URL
+async function getImageAsBase64(
+  imagePath: string,
+  zip: JSZip,
+  imageFiles: Map<string, string>
+): Promise<string | null> {
+  const foundPath = findImageInZip(imagePath, zip, imageFiles)
+  if (!foundPath) return null
+  
+  const imageFile = zip.file(foundPath)
+  if (!imageFile) return null
+  
+  try {
+    const imageData = await imageFile.async('base64')
+    const extension = foundPath.split('.').pop()?.toLowerCase() || 'png'
+    const mimeType = getMimeType(extension)
+    return `data:${mimeType};base64,${imageData}`
+  } catch {
+    return null
+  }
+}
+
+function findImageInZip(
+  imagePath: string, 
+  zip: JSZip,
+  imageFiles: Map<string, string>
+): string | undefined {
   // Direct match
   if (imageFiles.has(imagePath)) {
     return imagePath
+  }
+  
+  // Try with "images/" prefix (Bento.me export structure)
+  const withImagesPrefix = `images/${imagePath}`
+  if (imageFiles.has(withImagesPrefix)) {
+    return withImagesPrefix
   }
   
   // Try without leading slash or path
   const fileName = imagePath.split('/').pop()
   if (fileName) {
     for (const [path] of imageFiles) {
-      if (path.endsWith(fileName)) {
+      if (path.endsWith(fileName) || path.toLowerCase().endsWith(fileName.toLowerCase())) {
+        return path
+      }
+    }
+  }
+  
+  // Try to find any image with similar name in the images folder
+  const baseName = fileName?.replace(/\.[^.]+$/, '') // Remove extension
+  if (baseName) {
+    for (const [path] of imageFiles) {
+      const pathBaseName = path.split('/').pop()?.replace(/\.[^.]+$/, '')
+      if (pathBaseName?.toLowerCase() === baseName.toLowerCase()) {
         return path
       }
     }

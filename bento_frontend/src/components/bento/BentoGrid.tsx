@@ -70,13 +70,6 @@ export function BentoGrid({
     [onBlocksChange]
   )
 
-  // Responsive columns
-  const gridStyle = {
-    display: "grid",
-    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-    gap: `${gap * 4}px`,
-  }
-
   return (
     <DndContext
       sensors={sensors}
@@ -85,22 +78,31 @@ export function BentoGrid({
     >
       <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
         <div
-          style={gridStyle}
           className={cn(
-            "w-full max-w-6xl mx-auto",
-            // Responsive grid
-            "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+            "w-full max-w-6xl mx-auto grid gap-4",
+            "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+            "auto-rows-[minmax(140px,auto)]",
             className
           )}
+          style={{ gap: `${gap * 4}px` }}
         >
-          {items.map((block) => (
-            <BentoBlock
+          {items.map((block, index) => (
+            <div
               key={block.id}
-              block={block}
-              isEditing={isEditing}
-              onEdit={onBlockEdit}
-              onDelete={onBlockDelete}
-            />
+              className="animate-scale-in"
+              style={{ 
+                animationDelay: `${index * 50}ms`,
+                gridColumn: `span ${Math.min(block.gridWidth, 4)}`,
+                gridRow: `span ${block.gridHeight}`,
+              }}
+            >
+              <BentoBlock
+                block={block}
+                isEditing={isEditing}
+                onEdit={onBlockEdit}
+                onDelete={onBlockDelete}
+              />
+            </div>
           ))}
         </div>
       </SortableContext>

@@ -118,6 +118,9 @@ enum BlockType {
   TWITTER
   INSTAGRAM
   LINKEDIN
+  FACEBOOK
+  STEAM
+  DISCORD
   CUSTOM
 }
 

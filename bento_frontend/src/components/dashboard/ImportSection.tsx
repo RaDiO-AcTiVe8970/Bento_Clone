@@ -1,8 +1,6 @@
 "use client"
 
 import { BentoImport } from "@/components/import/BentoImport"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Upload } from "lucide-react"
 import { ParsedBentoData } from "@/lib/bento-parser"
 
 export function ImportSection() {
@@ -27,18 +25,5 @@ export function ImportSection() {
     }
   }
 
-  return (
-    <Card className="hover:shadow-md transition-shadow h-full">
-      <CardHeader>
-        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center mb-4">
-          <Upload className="w-6 h-6 text-orange-600" />
-        </div>
-        <CardTitle>Import from Bento</CardTitle>
-        <CardDescription className="mb-4">
-          Import your existing Bento.me profile
-        </CardDescription>
-        <BentoImport onImport={handleImport} />
-      </CardHeader>
-    </Card>
-  )
+  return <BentoImport onImport={handleImport} />
 }
