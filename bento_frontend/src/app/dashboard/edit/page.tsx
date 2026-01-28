@@ -121,12 +121,12 @@ export default function EditProfilePage() {
   }
 
   const handleDeleteBlock = useCallback((id: string) => {
-    setBlocks(blocks.filter((b) => b.id !== id))
-  }, [blocks])
+    setBlocks(prevBlocks => prevBlocks.filter((b) => b.id !== id))
+  }, [])
 
   const handleEditBlock = useCallback((updatedBlock: BlockData) => {
-    setBlocks(blocks.map((b) => b.id === updatedBlock.id ? updatedBlock : b))
-  }, [blocks])
+    setBlocks(prevBlocks => prevBlocks.map((b) => b.id === updatedBlock.id ? updatedBlock : b))
+  }, [])
 
   const handleSave = async () => {
     setLoading(true)

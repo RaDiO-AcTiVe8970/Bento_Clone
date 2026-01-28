@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Settings, Eye, BarChart3, ExternalLink, Sparkles, Pencil, Upload } from "lucide-react"
 import { ProfileLinkDisplay } from "@/components/dashboard/ProfileLinkDisplay"
 import { ImportSection } from "@/components/dashboard/ImportSection"
+import { DashboardNav } from "@/components/dashboard/DashboardNav"
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -16,45 +17,11 @@ export default async function DashboardPage() {
   }
 
   const user = session.user
-  const initials = user.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "?"
 
   return (
     <main className="min-h-screen mesh-gradient noise">
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-strong border-b border-border/50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-2xl text-gradient">
-            Bento
-          </Link>
-          
-          <div className="flex items-center gap-3">
-            {user.username && (
-              <Link href={`/${user.username}`} target="_blank">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <Eye className="w-4 h-4" />
-                  <span className="hidden sm:inline">View Profile</span>
-                </Button>
-              </Link>
-            )}
-            <Link href="/dashboard/settings">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Settings className="w-5 h-5" />
-              </Button>
-            </Link>
-            <Avatar className="w-10 h-10 border-2 border-primary/20">
-              <AvatarImage src={user.image || ""} alt={user.name || ""} />
-              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-      </header>
+      <DashboardNav user={user} />
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         {/* Welcome Section */}

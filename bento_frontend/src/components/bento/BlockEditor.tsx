@@ -129,6 +129,15 @@ export function BlockEditor({ block, onSave, onDelete, onClose }: BlockEditorPro
     p => p.gridWidth === editedBlock.gridWidth && p.gridHeight === editedBlock.gridHeight
   )
 
+  // Real-time update: Call onSave whenever editedBlock changes
+  useEffect(() => {
+    // Only update if there are actual changes
+    const hasChanges = JSON.stringify(editedBlock) !== JSON.stringify(block)
+    if (hasChanges) {
+      onSave(editedBlock)
+    }
+  }, [editedBlock, block, onSave])
+
   const handleSizeChange = (preset: SizePreset) => {
     setEditedBlock({
       ...editedBlock,
@@ -146,8 +155,7 @@ export function BlockEditor({ block, onSave, onDelete, onClose }: BlockEditorPro
     })
   }
 
-  const handleSave = () => {
-    onSave(editedBlock)
+  const handleClose = () => {
     onClose()
   }
 
@@ -387,9 +395,9 @@ export function BlockEditor({ block, onSave, onDelete, onClose }: BlockEditorPro
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleClose}>
               <Check className="w-4 h-4 mr-2" />
-              Save Changes
+              Done
             </Button>
           </div>
         </CardContent>

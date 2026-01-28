@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   DndContext,
   closestCenter,
@@ -41,6 +41,11 @@ export function BentoGrid({
   className,
 }: BentoGridProps) {
   const [items, setItems] = useState(blocks)
+
+  // Sync internal state with prop changes (for real-time editing)
+  useEffect(() => {
+    setItems(blocks)
+  }, [blocks])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

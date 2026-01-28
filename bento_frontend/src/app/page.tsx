@@ -1,28 +1,13 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, Zap, Palette, Share2, Grid3X3, MousePointerClick } from "lucide-react"
+import { Navbar } from "@/components/Navbar"
 
 export default function HomePage() {
   return (
     <main className="min-h-screen mesh-gradient noise">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-border/50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-2xl text-gradient">
-            Bento
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
