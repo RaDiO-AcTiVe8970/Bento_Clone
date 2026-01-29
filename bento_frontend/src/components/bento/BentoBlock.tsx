@@ -24,6 +24,7 @@ import {
   Play
 } from "lucide-react"
 import { SocialBlock } from "./SocialBlock"
+import { FaviconImage, getDomainName } from "@/hooks/useFavicon"
 
 export type BlockType = 
   | "LINK" 
@@ -177,8 +178,36 @@ function extractYouTubeChannelId(url: string): string | null {
 
 function extractSpotifyEmbed(url: string): string | null {
   try {
+    // Handle various Spotify URL formats
+    // https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+    // https://open.spotify.com/album/1DFixLWuPkv3KT3TnV35m3
+    // https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
+    // https://open.spotify.com/artist/0OdUWJ0sBjDrqHygGUXeCF
+    // https://open.spotify.com/episode/...
+    // https://open.spotify.com/show/...
+    
     const urlObj = new URL(url)
-    return urlObj.pathname
+    
+    // Must be a Spotify domain
+    if (!urlObj.hostname.includes('spotify.com')) {
+      return null
+    }
+    
+    // Extract the type and ID from the path
+    const pathMatch = urlObj.pathname.match(/\/(track|album|playlist|artist|episode|show)\/([a-zA-Z0-9]+)/)
+    
+    if (pathMatch) {
+      const type = pathMatch[1]
+      const id = pathMatch[2]
+      return `/${type}/${id}`
+    }
+    
+    // Fallback to just the pathname if it looks valid
+    if (urlObj.pathname && urlObj.pathname.length > 1) {
+      return urlObj.pathname
+    }
+    
+    return null
   } catch {
     return null
   }
@@ -236,9 +265,11 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
     
     switch (block.type) {
       case "LINK":
+        const domain = block.url ? getDomainName(block.url) : ""
+        
         // Size-aware LINK rendering
         if (isLarge) {
-          // Large: Rich preview with image
+          // Large: Rich preview with image or favicon
           return (
             <a 
               href={block.url} 
@@ -247,7 +278,7 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
               className="group flex h-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-300 overflow-hidden"
               style={customStyle}
             >
-              {block.imageUrl && (
+              {block.imageUrl ? (
                 <div className="w-1/2 h-full relative">
                   <img 
                     src={block.imageUrl} 
@@ -256,18 +287,26 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
                     loading="lazy"
                   />
                 </div>
+              ) : (
+                <div className="w-1/3 h-full flex items-center justify-center bg-gradient-to-br from-purple-500/5 to-pink-500/5">
+                  <FaviconImage 
+                    url={block.url} 
+                    size={80} 
+                    className="rounded-2xl shadow-lg group-hover:scale-110 transition-transform"
+                    fallback={
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <LinkIcon className="w-10 h-10 text-white" />
+                      </div>
+                    }
+                  />
+                </div>
               )}
               <div className={cn(
                 "flex flex-col justify-center p-6",
-                block.imageUrl ? "w-1/2" : "w-full items-center"
+                block.imageUrl ? "w-1/2" : "w-2/3"
               )}>
-                {!block.imageUrl && (
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <LinkIcon className="w-8 h-8 text-white" />
-                  </div>
-                )}
-                <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">{block.title || "Link"}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">{block.url}</p>
+                <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">{block.title || domain || "Link"}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">{domain}</p>
                 <div className="mt-4 flex items-center gap-2 text-primary">
                   <ExternalLink className="w-4 h-4" />
                   <span className="text-sm font-medium">Visit Link</span>
@@ -276,7 +315,7 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
             </a>
           )
         } else if (isMedium || isWide) {
-          // Medium/Wide: Compact horizontal layout
+          // Medium/Wide: Compact horizontal layout with favicon
           return (
             <a 
               href={block.url} 
@@ -293,19 +332,28 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
                   loading="lazy"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
-                  <LinkIcon className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                  <FaviconImage 
+                    url={block.url} 
+                    size={32} 
+                    className="w-8 h-8"
+                    fallback={
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <LinkIcon className="w-6 h-6 text-white" />
+                      </div>
+                    }
+                  />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <span className="font-semibold block truncate group-hover:text-primary transition-colors">{block.title || "Link"}</span>
-                <span className="text-xs text-muted-foreground truncate block">{block.url}</span>
+                <span className="font-semibold block truncate group-hover:text-primary transition-colors">{block.title || domain || "Link"}</span>
+                <span className="text-xs text-muted-foreground truncate block">{domain}</span>
               </div>
               <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity ml-2 flex-shrink-0" />
             </a>
           )
         } else {
-          // Small: Icon only
+          // Small: Favicon with title
           return (
             <a 
               href={block.url} 
@@ -314,19 +362,21 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
               className="group flex flex-col items-center justify-center h-full p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-300"
               style={customStyle}
             >
-              {block.imageUrl ? (
-                <img 
-                  src={block.imageUrl} 
-                  alt={block.title || "Link"} 
-                  className="w-10 h-10 rounded-lg object-cover shadow-lg group-hover:scale-110 transition-transform"
-                  loading="lazy"
+              <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center mb-2 shadow-lg group-hover:scale-110 transition-transform overflow-hidden">
+                <FaviconImage 
+                  url={block.url} 
+                  size={32} 
+                  className="w-8 h-8"
+                  fallback={
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <LinkIcon className="w-6 h-6 text-white" />
+                    </div>
+                  }
                 />
-              ) : (
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <LinkIcon className="w-5 h-5 text-white" />
-                </div>
-              )}
-              <span className="font-medium text-xs mt-2 text-center line-clamp-2">{block.title || "Link"}</span>
+              </div>
+              <span className="text-xs font-medium text-center truncate w-full group-hover:text-primary transition-colors">
+                {block.title || domain || "Link"}
+              </span>
             </a>
           )
         }
