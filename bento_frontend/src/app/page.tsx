@@ -2,10 +2,16 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, Zap, Palette, Share2, Grid3X3, MousePointerClick } from "lucide-react"
 import { Navbar } from "@/components/Navbar"
+import { WebsiteJsonLd, OrganizationJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/JsonLd"
 
 export default function HomePage() {
   return (
     <main className="min-h-screen mesh-gradient noise">
+      {/* Structured Data for SEO */}
+      <WebsiteJsonLd />
+      <OrganizationJsonLd />
+      <SoftwareApplicationJsonLd />
+      
       {/* Navigation */}
       <Navbar />
 
@@ -28,7 +34,7 @@ export default function HomePage() {
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 tracking-tight animate-slide-up">
               Create Your
               <br />
-              <span className="text-gradient">Beautiful</span> Bento
+              <span className="text-gradient">Beautiful</span> Portfolio
             </h1>
             
             {/* Subheading */}
@@ -150,7 +156,7 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Grid3X3 className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Bento Grid Layout</h3>
+              <h3 className="text-2xl font-bold mb-3">Portfolio Grid Layout</h3>
               <p className="text-muted-foreground text-lg">
                 Unique grid layouts that make your profile stand out from the crowd.
               </p>
@@ -172,9 +178,9 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-2xl font-bold mb-3">Import from Bento</h3>
+              <h3 className="text-2xl font-bold mb-3">Import from Bento.me</h3>
               <p className="text-muted-foreground text-lg">
-                Already have a Bento.me? Import your profile with one click.
+                Already have a Bento.me profile? Import it with one click.
               </p>
             </div>
           </div>
@@ -191,10 +197,10 @@ export default function HomePage() {
             
             <div className="relative">
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-                Ready to create your Bento?
+                Ready to create your portfolio?
               </h2>
               <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-                Join thousands of creators who use Bento to share their links beautifully.
+                Join thousands of creators who use BentoPortfolio to share their links beautifully.
               </p>
               <Link href="/login">
                 <Button size="lg" className="h-14 px-10 text-lg bg-white text-purple-600 hover:bg-white/90 shadow-xl">
@@ -211,9 +217,9 @@ export default function HomePage() {
       <footer className="py-12 border-t border-border">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="font-bold text-2xl text-gradient">Bento</div>
+            <div className="font-bold text-2xl text-gradient">BentoPortfolio</div>
             <p className="text-muted-foreground text-sm">
-              © 2026 Bento. Made with ❤️
+              © 2026 BentoPortfolio. Made with ❤️
             </p>
           </div>
         </div>

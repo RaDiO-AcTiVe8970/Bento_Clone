@@ -9,37 +9,95 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bentoportfolio.me';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: {
-    default: "Bento - Your Link in Bio",
-    template: "%s | Bento",
+    default: "BentoPortfolio - Your Link in Bio",
+    template: "%s | BentoPortfolio",
   },
-  description: "Create your beautiful, customizable link-in-bio page. Share all your important links in one place.",
-  keywords: ["link in bio", "portfolio", "personal page", "bento", "profile"],
-  authors: [{ name: "Bento Clone" }],
-  creator: "Bento Clone",
+  description: "Create your beautiful, customizable link-in-bio page. Build stunning portfolio grids with drag-and-drop blocks. Share all your important links, social media, and content in one place. Fast, beautiful, and free.",
+  keywords: [
+    "link in bio",
+    "portfolio",
+    "personal page",
+    "bento grid",
+    "profile",
+    "linktree alternative",
+    "bio link",
+    "social media links",
+    "creator tools",
+    "personal branding",
+    "link page",
+    "custom bio link",
+  ],
+  authors: [{ name: "BentoPortfolio" }],
+  creator: "BentoPortfolio",
+  publisher: "BentoPortfolio",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  category: "technology",
+  classification: "Personal Portfolio Builder",
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Bento",
-    title: "Bento - Your Link in Bio",
-    description: "Create your beautiful, customizable link-in-bio page.",
+    url: baseUrl,
+    siteName: "BentoPortfolio",
+    title: "BentoPortfolio - Your Link in Bio",
+    description: "Create your beautiful, customizable link-in-bio page. Build stunning portfolio grids with drag-and-drop blocks.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "BentoPortfolio - Your Link in Bio",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bento - Your Link in Bio",
-    description: "Create your beautiful, customizable link-in-bio page.",
+    title: "BentoPortfolio - Your Link in Bio",
+    description: "Create your beautiful, customizable link-in-bio page. Build stunning portfolio grids with drag-and-drop blocks.",
+    images: ["/twitter-image"],
+    creator: "@bentoportfolio",
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon", type: "image/png" },
+    ],
+    other: [
+      { rel: "mask-icon", url: "/favicon.svg", color: "#8b5cf6" },
+    ],
+  },
+  manifest: "/manifest.json",
+  alternates: {
+    canonical: baseUrl,
+  },
+  verification: {
+    // Add your verification codes here when available
+    // google: "google-verification-code",
+    // yandex: "yandex-verification-code",
   },
 };
 
@@ -61,9 +119,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.google.com" />
       </head>
       <body
         className={`${inter.variable} font-sans antialiased min-h-screen bg-background text-foreground`}

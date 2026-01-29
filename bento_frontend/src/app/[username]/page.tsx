@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader"
 import { BentoGrid } from "@/components/bento/BentoGrid"
 import { BlockData } from "@/components/bento/BentoBlock"
 import Link from "next/link"
+import { ProfileJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd"
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>
@@ -26,18 +27,18 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   return {
-    title: `${user.name || user.username} | Bento`,
-    description: user.bio || `Check out ${user.name || user.username}'s Bento profile`,
+    title: `${user.name || user.username} | BentoPortfolio`,
+    description: user.bio || `Check out ${user.name || user.username}'s BentoPortfolio profile`,
     openGraph: {
-      title: `${user.name || user.username} | Bento`,
-      description: user.bio || `Check out ${user.name || user.username}'s Bento profile`,
+      title: `${user.name || user.username} | BentoPortfolio`,
+      description: user.bio || `Check out ${user.name || user.username}'s BentoPortfolio profile`,
       images: user.image ? [{ url: user.image }] : [],
       type: "profile",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${user.name || user.username} | Bento`,
-      description: user.bio || `Check out ${user.name || user.username}'s Bento profile`,
+      title: `${user.name || user.username} | BentoPortfolio`,
+      description: user.bio || `Check out ${user.name || user.username}'s BentoPortfolio profile`,
     },
   }
 }
@@ -96,8 +97,26 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     isVisible: block.isVisible,
   }))
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bentoportfolio.me'
+  const profileUrl = `${baseUrl}/${user.username}`
+
   return (
     <main className="min-h-screen relative overflow-hidden">
+      {/* Structured Data for SEO */}
+      <ProfileJsonLd
+        name={user.name || user.username || ''}
+        username={user.username || ''}
+        bio={user.bio || undefined}
+        image={user.image || undefined}
+        url={profileUrl}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: baseUrl },
+          { name: user.name || user.username || 'Profile', url: profileUrl },
+        ]}
+      />
+      
       {/* Animated background */}
       <div className="fixed inset-0 mesh-gradient" />
       <div className="fixed inset-0 noise pointer-events-none" />
@@ -114,7 +133,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <header className="sticky top-0 z-50 glass-strong border-b border-white/10">
           <div className="container mx-auto px-4 h-14 flex items-center justify-between">
             <Link href="/" className="font-bold text-xl text-gradient">
-              Bento
+              BentoPortfolio
             </Link>
             <Link 
               href="/login" 
@@ -157,7 +176,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             href="/" 
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            Made with <span className="text-gradient font-semibold">Bento</span>
+            Made with <span className="text-gradient font-semibold">BentoPortfolio</span>
           </Link>
         </footer>
       </div>

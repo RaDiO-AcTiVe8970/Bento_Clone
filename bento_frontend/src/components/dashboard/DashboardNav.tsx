@@ -37,7 +37,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
     <header className="sticky top-0 z-50 glass-strong border-b border-border/50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="font-bold text-2xl text-gradient">
-          Bento
+          BentoPortfolio
         </Link>
         
         <div className="flex items-center gap-3">

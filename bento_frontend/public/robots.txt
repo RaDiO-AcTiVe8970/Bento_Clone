@@ -1,0 +1,12 @@
+# BentoPortfolio Robots.txt
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# Disallow admin/dashboard pages from indexing
+Disallow: /dashboard
+Disallow: /api
+
+# Allow search engines to find the sitemap
+Sitemap: https://bentoportfolio.me/sitemap.xml

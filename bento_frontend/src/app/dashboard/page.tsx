@@ -33,7 +33,7 @@ export default async function DashboardPage() {
             <span className="text-3xl">👋</span>
           </div>
           <p className="text-lg text-muted-foreground">
-            Manage your Bento profile and customize your blocks.
+            Manage your BentoPortfolio profile and customize your blocks.
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
             <div>
               <h2 className="text-2xl font-bold mb-1 flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-primary" />
-                Your Bento Link
+                Your BentoPortfolio Link
               </h2>
               <p className="text-muted-foreground">
                 Share this link with your audience
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
           ) : (
             <div className="p-6 bg-muted/50 rounded-xl border border-dashed border-border">
               <p className="text-muted-foreground mb-4">
-                You haven&apos;t set a username yet. Set one to get your custom Bento link!
+                You haven&apos;t set a username yet. Set one to get your custom BentoPortfolio link!
               </p>
               <Link href="/dashboard/settings">
                 <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0">

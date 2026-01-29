@@ -8,7 +8,7 @@ interface ProfileLinkDisplayProps {
 }
 
 export function ProfileLinkDisplay({ username }: ProfileLinkDisplayProps) {
-  const [origin, setOrigin] = useState("bento.me")
+  const [origin, setOrigin] = useState("bentoportfolio.me")
 
   useEffect(() => {
     setOrigin(window.location.origin)

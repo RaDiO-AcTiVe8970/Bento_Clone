@@ -19,7 +19,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <Link href="/" className="inline-block">
-              <span className="text-4xl font-bold text-gradient">Bento</span>
+              <span className="text-4xl font-bold text-gradient">BentoPortfolio</span>
             </Link>
           </div>
           

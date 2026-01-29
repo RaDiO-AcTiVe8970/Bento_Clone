@@ -119,7 +119,7 @@ export default function SettingsPage() {
                   Username
                 </label>
                 <div className="flex items-center">
-                  <span className="text-sm text-muted-foreground mr-1">bento.me/</span>
+                  <span className="text-sm text-muted-foreground mr-1">bentoportfolio.me/</span>
                   <Input
                     id="username"
                     value={formData.username}
