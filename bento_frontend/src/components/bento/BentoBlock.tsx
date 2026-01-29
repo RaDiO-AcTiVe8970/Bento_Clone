@@ -448,9 +448,9 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
         const spotifyPath = block.url ? extractSpotifyEmbed(block.url) : null
         // Size-aware SPOTIFY rendering
         if (isLarge && spotifyPath) {
-          // Large: Full embedded player
+          // Large: Full embedded player (352px height recommended)
           return (
-            <div className="h-full w-full">
+            <div className="h-full w-full overflow-hidden rounded-2xl bg-[#121212]">
               <iframe
                 src={`https://open.spotify.com/embed${spotifyPath}?utm_source=generator&theme=0`}
                 width="100%"
@@ -458,15 +458,14 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
                 frameBorder="0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                className="rounded-2xl"
-                style={{ minHeight: '152px' }}
+                style={{ borderRadius: '12px', minHeight: '352px' }}
               />
             </div>
           )
         } else if ((isMedium || isWide) && spotifyPath) {
-          // Medium: Compact player
+          // Medium: Compact player (152px height)
           return (
-            <div className="h-full w-full">
+            <div className="h-full w-full overflow-hidden rounded-2xl bg-[#121212]">
               <iframe
                 src={`https://open.spotify.com/embed${spotifyPath}?utm_source=generator&theme=0`}
                 width="100%"
@@ -474,13 +473,27 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
                 frameBorder="0"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
-                className="rounded-2xl"
-                style={{ minHeight: '80px' }}
+                style={{ borderRadius: '12px', minHeight: '152px' }}
+              />
+            </div>
+          )
+        } else if (isTall && spotifyPath) {
+          // Tall: Vertical compact player
+          return (
+            <div className="h-full w-full overflow-hidden rounded-2xl bg-[#121212]">
+              <iframe
+                src={`https://open.spotify.com/embed${spotifyPath}?utm_source=generator&theme=0`}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                style={{ borderRadius: '12px', minHeight: '232px' }}
               />
             </div>
           )
         } else {
-          // Small: Icon with title
+          // Small: Icon with title (clickable link)
           return (
             <a 
               href={block.url}
