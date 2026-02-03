@@ -1,21 +1,39 @@
 import { PrismaClient } from '@prisma/client'
 
-// Determine which database URL to use based on DB_USE_DOCKER flag
+// Determine which database URL to use based on DB_SOURCE flag
 function getDatabaseUrl(): string {
-  const useDocker = process.env.DB_USE_DOCKER === 'true'
+  const dbSource = process.env.DB_SOURCE?.toLowerCase() || 'render'
   
-  if (useDocker) {
-    const dockerUrl = process.env.DATABASE_URL_DOCKER
-    if (!dockerUrl) {
-      throw new Error('DATABASE_URL_DOCKER is not set in environment variables')
+  switch (dbSource) {
+    case 'docker': {
+      const dockerUrl = process.env.DATABASE_URL_DOCKER
+      if (!dockerUrl) {
+        throw new Error('DATABASE_URL_DOCKER is not set in environment variables')
+      }
+      return dockerUrl
     }
-    return dockerUrl
-  } else {
-    const remoteUrl = process.env.DATABASE_URL_REMOTE
-    if (!remoteUrl) {
-      throw new Error('DATABASE_URL_REMOTE is not set in environment variables')
+    case 'remote': {
+      const remoteUrl = process.env.DATABASE_URL_REMOTE
+      if (!remoteUrl) {
+        throw new Error('DATABASE_URL_REMOTE is not set in environment variables')
+      }
+      return remoteUrl
     }
-    return remoteUrl
+    case 'render': {
+      const renderUrl = process.env.DATABASE_URL_RENDER
+      if (!renderUrl) {
+        throw new Error('DATABASE_URL_RENDER is not set in environment variables')
+      }
+      return renderUrl
+    }
+    default: {
+      // Fallback to DATABASE_URL if set
+      const fallbackUrl = process.env.DATABASE_URL
+      if (fallbackUrl) {
+        return fallbackUrl
+      }
+      throw new Error(`Unknown DB_SOURCE: ${dbSource}. Use "docker", "remote", or "render"`)
+    }
   }
 }
 
@@ -25,8 +43,13 @@ process.env.DATABASE_URL = databaseUrl
 
 // Log which database is being used (only once during startup)
 if (typeof globalThis !== 'undefined' && !(globalThis as Record<string, unknown>).__dbLogged) {
-  const isDocker = process.env.DB_USE_DOCKER === 'true'
-  console.log(isDocker ? '🐳 Using Docker database' : '🌐 Using Remote database')
+  const dbSource = process.env.DB_SOURCE?.toLowerCase() || 'render'
+  const icons: Record<string, string> = {
+    docker: '🐳 Using Docker database',
+    remote: '🌐 Using Remote database (Bangladesh)',
+    render: '☁️  Using Render.com database',
+  }
+  console.log(icons[dbSource] || `📦 Using database: ${dbSource}`)
   ;(globalThis as Record<string, unknown>).__dbLogged = true
 }
 
