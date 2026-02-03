@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd bento_frontend && npm run build",
+  "devCommand": "cd bento_frontend && npm run dev",
+  "installCommand": "cd bento_frontend && npm install",
+  "framework": "nextjs",
+  "rootDirectory": "bento_frontend"
+}
