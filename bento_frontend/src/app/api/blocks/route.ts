@@ -151,7 +151,7 @@ export async function PUT(request: Request) {
             userId: session.user.id as string,
             type: block.type as "LINK" | "TEXT" | "IMAGE" | "MAP" | "SPOTIFY" | "YOUTUBE" | "GITHUB" | "TWITTER" | "INSTAGRAM" | "LINKEDIN" | "CUSTOM",
             title: block.title || null,
-            content: block.content || null,
+            content: block.content ? JSON.parse(JSON.stringify(block.content)) : undefined,
             url: block.url || null,
             imageUrl: block.imageUrl || null,
             gridX: block.gridX ?? 0,

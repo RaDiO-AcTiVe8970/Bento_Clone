@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
             userId: session.user.id,
             type: toPrismaBlockType(block.type) as any,
             title: block.title || `Imported Block ${index + 1}`,
-            content: block.content || {},
+            content: block.content ? JSON.parse(JSON.stringify(block.content)) : null,
             url: block.url,
             imageUrl: block.imageUrl,
             gridX: block.gridX,
