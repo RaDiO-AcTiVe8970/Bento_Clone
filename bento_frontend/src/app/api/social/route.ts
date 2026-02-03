@@ -140,14 +140,18 @@ async function fetchInstagramProfile(username: string) {
         if (postsResponse.ok) {
           const postsData = await postsResponse.json()
           if (postsData.data && Array.isArray(postsData.data)) {
-            profileData.posts = postsData.data.slice(0, 6).map((post: any) => ({
-              id: post.id,
-              imageUrl: post.media_url,
-              caption: post.caption || '',
-              permalink: post.permalink,
-              mediaType: post.media_type,
-              timestamp: post.timestamp,
-            }))
+            // Filter to only include IMAGE posts (exclude videos and carousels)
+            profileData.posts = postsData.data
+              .filter((post: any) => post.media_type === 'IMAGE')
+              .slice(0, 6)
+              .map((post: any) => ({
+                id: post.id,
+                imageUrl: post.media_url,
+                caption: post.caption || '',
+                permalink: post.permalink,
+                mediaType: post.media_type,
+                timestamp: post.timestamp,
+              }))
           }
         }
       } catch (apiError) {
