@@ -12,7 +12,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { name, username, bio, location } = body
+    const { name, username, bio, location, image } = body
 
     // Check if username is taken
     if (username) {
@@ -35,6 +35,7 @@ export async function PATCH(request: Request) {
         username,
         bio,
         location,
+        ...(image !== undefined && { image }),
       },
     })
 

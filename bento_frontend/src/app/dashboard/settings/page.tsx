@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,16 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Save, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Upload as UploadIcon, X } from "lucide-react"
 
 export default function SettingsPage() {
   const { data: session, update } = useSession()
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: session?.user?.name || "",
     username: session?.user?.username || "",
     bio: session?.user?.bio || "",
+    image: session?.user?.image || "",
   })
 
   const user = session?.user
@@ -27,6 +31,89 @@ export default function SettingsPage() {
     .join("")
     .toUpperCase()
     .slice(0, 2) || "?"
+
+  const resizeImage = (dataUrl: string, maxWidth: number = 400, maxHeight: number = 400): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        // Calculate new dimensions maintaining aspect ratio
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height)
+            height = maxHeight
+          }
+        }
+
+        // Create canvas and draw resized image
+        const canvas = document.createElement("canvas")
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext("2d")
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"))
+          return
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL("image/jpeg", 0.85))
+      }
+      img.onerror = () => reject(new Error("Failed to load image"))
+      img.src = dataUrl
+    })
+  }
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file size (max 5MB before resize)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB")
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file")
+      return
+    }
+
+    setUploadingImage(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string
+        const resizedBase64 = await resizeImage(dataUrl, 400, 400)
+        setPreviewImage(resizedBase64)
+        setFormData({ ...formData, image: resizedBase64 })
+        setUploadingImage(false)
+      }
+      reader.onerror = () => {
+        setUploadingImage(false)
+        alert("Failed to read file")
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error("Error processing image:", error)
+      alert("Failed to process image")
+      setUploadingImage(false)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, image: "" })
+    setPreviewImage(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,13 +176,52 @@ export default function SettingsPage() {
               {/* Avatar */}
               <div className="flex items-center gap-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src={user?.image || ""} alt={user?.name || ""} />
+                  <AvatarImage src={previewImage || formData.image || user?.image || ""} alt={user?.name || ""} />
                   <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-sm font-medium">Profile Photo</p>
-                  <p className="text-xs text-muted-foreground">
-                    Synced from your login provider
+                <div className="flex-1">
+                  <p className="text-sm font-medium mb-2">Profile Photo</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <UploadIcon className="w-4 h-4 mr-1" />
+                          Upload
+                        </>
+                      )}
+                    </Button>
+                    {formData.image && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {formData.image ? "Custom photo selected" : "No custom photo set"}
                   </p>
                 </div>
               </div>
