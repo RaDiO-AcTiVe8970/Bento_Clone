@@ -41,11 +41,19 @@ export function BentoGrid({
   className,
 }: BentoGridProps) {
   const [items, setItems] = useState(blocks)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024)
 
   // Sync internal state with prop changes (for real-time editing)
   useEffect(() => {
     setItems(blocks)
   }, [blocks])
+
+  // Track window width for responsive column calculation
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -75,6 +83,14 @@ export function BentoGrid({
     [onBlocksChange]
   )
 
+  // Calculate responsive column span
+  const getResponsiveColSpan = (blockWidth: number) => {
+    let currentColumns = 1
+    if (windowWidth >= 640) currentColumns = 2
+    if (windowWidth >= 1024) currentColumns = 4
+    return Math.min(blockWidth, currentColumns)
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -97,7 +113,7 @@ export function BentoGrid({
               className="animate-scale-in"
               style={{ 
                 animationDelay: `${index * 50}ms`,
-                gridColumn: `span ${Math.min(block.gridWidth, 4)}`,
+                gridColumn: `span ${getResponsiveColSpan(block.gridWidth)}`,
                 gridRow: `span ${block.gridHeight}`,
               }}
             >
