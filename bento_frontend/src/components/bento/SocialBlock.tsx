@@ -2,6 +2,7 @@
 
 import { useSocialProfile, getAvatarFallback } from "@/hooks/useSocialProfile"
 import { cn } from "@/lib/utils"
+import { InstagramGrid } from "./InstagramGrid"
 import { 
   Github, 
   Twitter, 
@@ -440,18 +441,55 @@ export function SocialBlock({
             )}
           </div>
           {platform === "instagram" && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 w-full">
               <div className="grid grid-cols-3 gap-1">
-                {[...Array(6)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={cn(
-                      "aspect-square rounded",
-                      i % 3 === 0 ? "bg-white/30" : 
-                      i % 2 === 0 ? "bg-white/20" : "bg-white/10"
-                    )}
-                  />
-                ))}
+                {profile?.posts && profile.posts.length > 0 ? (
+                  profile.posts.slice(0, 6).map((post, i) => (
+                    <a
+                      key={post.id}
+                      href={post.permalink || url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative aspect-square rounded overflow-hidden hover:opacity-80 transition-opacity"
+                    >
+                      {post.imageUrl && !post.isPlaceholder ? (
+                        <img 
+                          src={post.imageUrl} 
+                          alt={post.caption || `Post ${i + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={cn(
+                          "w-full h-full flex items-center justify-center",
+                          i % 3 === 0 ? "bg-gradient-to-br from-pink-500 to-purple-500" : 
+                          i % 2 === 0 ? "bg-gradient-to-br from-purple-500 to-orange-400" : 
+                          "bg-gradient-to-br from-orange-400 to-pink-500"
+                        )}>
+                          <Instagram className="w-6 h-6 text-white/60" />
+                        </div>
+                      )}
+                      {post.caption && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors flex items-center justify-center">
+                          <p className="text-white text-xs text-center px-2 opacity-0 group-hover:opacity-100 transition-opacity line-clamp-3">
+                            {post.caption}
+                          </p>
+                        </div>
+                      )}
+                    </a>
+                  ))
+                ) : (
+                  [...Array(6)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={cn(
+                        "aspect-square rounded",
+                        i % 3 === 0 ? "bg-white/30" : 
+                        i % 2 === 0 ? "bg-white/20" : "bg-white/10"
+                      )}
+                    />
+                  ))
+                )}
               </div>
             </div>
           )}

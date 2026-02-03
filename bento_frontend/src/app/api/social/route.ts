@@ -116,19 +116,57 @@ async function fetchTwitterProfile(username: string) {
 async function fetchInstagramProfile(username: string) {
   // Instagram API is restricted - use multiple fallback approaches
   try {
-    // Primary: use unavatar which aggregates multiple sources
-    // Fallbacks include direct profile pic attempts
-    return {
+    // Try to fetch profile using Instagram Graph API if access token available
+    let profileData: any = {
       platform: "instagram",
       username: username,
       name: formatDisplayName(username),
-      // unavatar tries multiple sources including Gravatar, social, etc
       avatar: `https://unavatar.io/instagram/${username}?fallback=false`,
       avatarFallbacks: [
-        `https://i.pravatar.cc/150?u=${username}@instagram`, // Consistent avatar based on username
+        `https://i.pravatar.cc/150?u=${username}@instagram`,
       ],
       url: `https://instagram.com/${username}`,
+      posts: [] as any[],
     }
+
+    // Attempt to fetch real posts if we have Instagram credentials
+    if (process.env.INSTAGRAM_ACCESS_TOKEN && process.env.INSTAGRAM_USER_ID) {
+      try {
+        const postsResponse = await fetch(
+          `https://graph.instagram.com/v18.0/${process.env.INSTAGRAM_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,timestamp&access_token=${process.env.INSTAGRAM_ACCESS_TOKEN}`,
+          { next: { revalidate: 3600 } }
+        )
+
+        if (postsResponse.ok) {
+          const postsData = await postsResponse.json()
+          if (postsData.data && Array.isArray(postsData.data)) {
+            profileData.posts = postsData.data.slice(0, 6).map((post: any) => ({
+              id: post.id,
+              imageUrl: post.media_url,
+              caption: post.caption || '',
+              permalink: post.permalink,
+              mediaType: post.media_type,
+              timestamp: post.timestamp,
+            }))
+          }
+        }
+      } catch (apiError) {
+        console.warn("Instagram Graph API fetch failed, using placeholder posts:", apiError)
+        // Continue with empty posts - will show placeholder
+      }
+    }
+
+    // If no real posts, create placeholder posts with Instagram-themed styling
+    if (profileData.posts.length === 0) {
+      profileData.posts = [...Array(6)].map((_, i) => ({
+        id: `placeholder-${i}`,
+        imageUrl: null,
+        caption: `Post ${i + 1}`,
+        isPlaceholder: true,
+      }))
+    }
+
+    return profileData
   } catch (error) {
     console.error("Instagram profile error:", error)
     return null

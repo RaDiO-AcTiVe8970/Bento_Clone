@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from "react"
 
+export interface InstagramPost {
+  id: string
+  imageUrl?: string
+  caption?: string
+  permalink?: string
+  mediaType?: string
+  timestamp?: string
+  isPlaceholder?: boolean
+}
+
 export interface SocialProfile {
   platform: string
   username?: string
@@ -17,6 +27,7 @@ export interface SocialProfile {
   subscribers?: string
   videos?: string
   url: string
+  posts?: InstagramPost[]
 }
 
 // In-memory cache for client-side
