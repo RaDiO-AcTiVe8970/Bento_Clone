@@ -1,5 +1,5 @@
 "use client"
-
+// dashboard navigation bar component
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
