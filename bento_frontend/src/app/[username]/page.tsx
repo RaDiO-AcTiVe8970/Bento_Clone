@@ -7,6 +7,9 @@ import { BlockData } from "@/components/bento/BentoBlock"
 import Link from "next/link"
 import { ProfileJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd"
 
+// Revalidate every 60 seconds to show updated profile data
+export const revalidate = 30
+
 interface ProfilePageProps {
   params: Promise<{ username: string }>
 }
