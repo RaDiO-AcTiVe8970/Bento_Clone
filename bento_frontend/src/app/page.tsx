@@ -1,8 +1,34 @@
 import Link from "next/link"
+import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles, Zap, Palette, Share2, Grid3X3, MousePointerClick } from "lucide-react"
 import { Navbar } from "@/components/Navbar"
 import { WebsiteJsonLd, OrganizationJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/JsonLd"
+
+export const metadata: Metadata = {
+  title: "BentoPortfolio - Create Your Beautiful Portfolio",
+  description: "Build a stunning, customizable link-in-bio page to share all your important links and content. Fast, beautiful, and free.",
+  openGraph: {
+    title: "BentoPortfolio - Create Your Beautiful Portfolio",
+    description: "Build a stunning, customizable link-in-bio page to share all your important links and content.",
+    type: "website",
+    url: "https://bento-clone-five.vercel.app",
+    images: [
+      {
+        url: "https://bento-clone-five.vercel.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "BentoPortfolio - Your Link in Bio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BentoPortfolio - Create Your Beautiful Portfolio",
+    description: "Build a stunning, customizable link-in-bio page to share all your important links and content.",
+    images: ["https://bento-clone-five.vercel.app/opengraph-image"],
+  },
+}
 
 export default function HomePage() {
   return (
