@@ -71,14 +71,14 @@ export default function HomePage() {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up animation-delay-400">
-              <Link href="/login">
-                <Button size="lg" className="h-14 px-8 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all group">
+              <Link href="/login" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full h-14 px-8 text-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all group">
                   Get Started Free
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/radio-active">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-2 hover:bg-secondary">
+              <Link href="/radio-active" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full h-14 px-8 text-lg border-2 hover:bg-secondary">
                   View Demo
                 </Button>
               </Link>

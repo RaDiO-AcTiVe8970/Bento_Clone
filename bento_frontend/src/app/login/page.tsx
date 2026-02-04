@@ -84,9 +84,12 @@ export default function LoginPage() {
           {/* Sign up link */}
           <p className="text-center text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline font-semibold">
-              Sign up for free
-            </Link>
+            <button 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="text-primary hover:underline font-semibold cursor-pointer"
+            >
+              Sign up with OAuth above
+            </button>
           </p>
         </div>
         
