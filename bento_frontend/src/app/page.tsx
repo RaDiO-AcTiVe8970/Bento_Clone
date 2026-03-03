@@ -77,7 +77,7 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/radio-active" className="w-full sm:w-auto">
+              <Link href="/radio_active" className="w-full sm:w-auto">
                 <Button size="lg" variant="outline" className="w-full h-14 px-8 text-lg border-2 hover:bg-secondary">
                   View Demo
                 </Button>
