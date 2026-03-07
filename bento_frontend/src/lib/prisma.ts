@@ -26,13 +26,20 @@ function getDatabaseUrl(): string {
       }
       return renderUrl
     }
+    case 'railway': {
+      const railwayUrl = process.env.DATABASE_URL_RAILWAY
+      if (!railwayUrl) {
+        throw new Error('DATABASE_URL_RAILWAY is not set in environment variables')
+      }
+      return railwayUrl
+    }
     default: {
       // Fallback to DATABASE_URL if set
       const fallbackUrl = process.env.DATABASE_URL
       if (fallbackUrl) {
         return fallbackUrl
       }
-      throw new Error(`Unknown DB_SOURCE: ${dbSource}. Use "docker", "remote", or "render"`)
+      throw new Error(`Unknown DB_SOURCE: ${dbSource}. Use "docker", "remote", "render", or "railway"`)
     }
   }
 }
@@ -48,6 +55,7 @@ if (typeof globalThis !== 'undefined' && !(globalThis as Record<string, unknown>
     docker: '🐳 Using Docker database',
     remote: '🌐 Using Remote database (Bangladesh)',
     render: '☁️  Using Render.com database',
+    railway: '🚂 Using Railway database',
   }
   console.log(icons[dbSource] || `📦 Using database: ${dbSource}`)
   ;(globalThis as Record<string, unknown>).__dbLogged = true
