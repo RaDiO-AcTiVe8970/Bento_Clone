@@ -17,6 +17,7 @@ const toPrismaBlockType = (type: string): string => {
     'TWITTER': 'TWITTER',
     'INSTAGRAM': 'INSTAGRAM',
     'LINKEDIN': 'LINKEDIN',
+    'STEAM': 'STEAM',
     'CUSTOM': 'CUSTOM',
   }
   return typeMap[type] || 'LINK'

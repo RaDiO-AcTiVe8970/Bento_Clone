@@ -26,6 +26,7 @@ import {
   Twitter,
   Instagram,
   Linkedin,
+  Gamepad2,
   X
 } from "lucide-react"
 
@@ -40,6 +41,7 @@ const blockTypeOptions: { type: BlockType; icon: React.ReactNode; label: string 
   { type: "SPOTIFY", icon: <Music className="w-4 h-4" />, label: "Spotify" },
   { type: "YOUTUBE", icon: <Youtube className="w-4 h-4" />, label: "YouTube" },
   { type: "MAP", icon: <MapPin className="w-4 h-4" />, label: "Map" },
+  { type: "STEAM", icon: <Gamepad2 className="w-4 h-4" />, label: "Steam" },
 ]
 
 export default function EditProfilePage() {
@@ -286,13 +288,13 @@ export default function EditProfilePage() {
                       />
                     </div>
 
-                    {["LINK", "GITHUB", "TWITTER", "INSTAGRAM", "LINKEDIN", "SPOTIFY", "YOUTUBE"].includes(newBlockType) && (
+                    {["LINK", "GITHUB", "TWITTER", "INSTAGRAM", "LINKEDIN", "SPOTIFY", "YOUTUBE", "STEAM"].includes(newBlockType) && (
                       <div>
-                        <label className="text-sm font-medium">URL</label>
+                        <label className="text-sm font-medium">URL {newBlockType === "STEAM" && "(Steam ID or Profile URL)"}</label>
                         <Input
                           value={newBlockData.url}
                           onChange={(e) => setNewBlockData({ ...newBlockData, url: e.target.value })}
-                          placeholder="https://..."
+                          placeholder={newBlockType === "STEAM" ? "76561198286509394 or https://steamcommunity.com/profiles/..." : "https://..."}
                         />
                       </div>
                     )}

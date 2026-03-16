@@ -24,6 +24,7 @@ import {
   Play
 } from "lucide-react"
 import { SocialBlock } from "./SocialBlock"
+import { SteamBlock } from "./SteamBlock"
 import { FaviconImage, getDomainName } from "@/hooks/useFavicon"
 
 export type BlockType = 
@@ -146,6 +147,11 @@ function extractSteamId(url: string): { type: 'id' | 'profile'; value: string } 
   const profileMatch = url.match(/steamcommunity\.com\/profiles\/(\d+)/)
   if (profileMatch) return { type: 'profile', value: profileMatch[1] }
   
+  // Plain Steam ID (numeric string like 76561198286509394)
+  if (/^\d+$/.test(url.trim())) {
+    return { type: 'profile', value: url.trim() }
+  }
+  
   return null
 }
 
@@ -228,6 +234,34 @@ function extractMapCoordinates(url: string): { lat: number; lng: number } | null
   return null
 }
 
+// Detect the type of link and return the specific block type
+function detectLinkType(url: string): BlockType {
+  const lowerUrl = url.toLowerCase()
+
+  // Check for social platforms
+  if (lowerUrl.includes('github.com')) return 'GITHUB'
+  if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) return 'TWITTER'
+  if (lowerUrl.includes('instagram.com')) return 'INSTAGRAM'
+  if (lowerUrl.includes('linkedin.com')) return 'LINKEDIN'
+  if (lowerUrl.includes('facebook.com')) return 'FACEBOOK'
+  
+  // Check for media platforms
+  if (lowerUrl.includes('spotify.com')) return 'SPOTIFY'
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YOUTUBE'
+  
+  // Check for Steam
+  if (lowerUrl.includes('steamcommunity.com') || /^\d+$/.test(url.trim())) return 'STEAM'
+  
+  // Check for Discord
+  if (lowerUrl.includes('discord.')) return 'DISCORD'
+  
+  // Check for Map
+  if (lowerUrl.includes('maps.google') || lowerUrl.includes('google.com/maps')) return 'MAP'
+  
+  // Default to generic LINK
+  return 'LINK'
+}
+
 export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: BentoBlockProps) {
   const {
     attributes,
@@ -263,7 +297,13 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
   const renderBlockContent = () => {
     const brand = brandColors[block.type]
     
-    switch (block.type) {
+    // For LINK blocks, detect the actual type
+    let blockType = block.type
+    if (block.type === "LINK" && block.url) {
+      blockType = detectLinkType(block.url)
+    }
+    
+    switch (blockType) {
       case "LINK":
         const domain = block.url ? getDomainName(block.url) : ""
         
@@ -692,12 +732,10 @@ export function BentoBlock({ block, isEditing = false, onEdit, onDelete }: Bento
         )
       
       case "STEAM":
-        const steamInfo = block.url ? extractSteamId(block.url) : null
+        const steamId = block.url ? extractSteamId(block.url) : null
         return (
-          <SocialBlock
-            platform="steam"
-            username={steamInfo?.value || undefined}
-            url={block.url || ""}
+          <SteamBlock
+            steamId={steamId?.value || undefined}
             title={block.title}
             isLarge={isLarge}
             isMedium={isMedium}
